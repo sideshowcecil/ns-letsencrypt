@@ -1,10 +1,18 @@
 #!/bin/bash
-export counter_file=$(mktemp "/root/ns-letsencrypt/.counter.XXXXXX")
-export connect_file=$(mktemp "/root/ns-letsencrypt/.connect.XXXXXX")
+
+# Base
+NSLE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEHYDRATED="${NSLE}/dehydrated/dehydrated"
+CONFIG="${NSLE}/config.sh"
+HOOK="${NSLE}/ns-hook.sh"
+
+# Control files used by hooks
+export counter_file=$(mktemp "${NSLE}/.counter.XXXXXX")
+export connect_file=$(mktemp "${NSLE}/.connect.XXXXXX")
 printf '%s\n' "0" >"$connect_file"
 
-#Force renewal
-/root/ns-letsencrypt/dehydrated/dehydrated -c -f /root/ns-letsencrypt/config.sh -x -k /root/ns-letsencrypt/ns-hook.sh
+# Force renewal
+$DEHYDRATED -c -f $CONFIG -x -k $HOOK
 
-#Cleanup unused certs
-/root/ns-letsencrypt/dehydrated/dehydrated -gc -f /root/ns-letsencrypt/config.sh
+# Cleanup unused certs
+$DEHYDRATED -gc -f $CONFIG
