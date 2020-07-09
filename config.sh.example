@@ -1,15 +1,22 @@
 #!/bin/bash
 
-# Base
-NSLE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-KEYSIZE="2048"
-PRIVATE_KEY_RENEW="no"
+CHALLENGETYPE="dns-01"
 
 # USE BELOW CA FOR TESTING OTHERWISE YOU MIGHT GET BANNED FROM LE https://community.letsencrypt.org/t/rate-limits-for-lets-encrypt/6769
 CA="https://acme-staging-v02.api.letsencrypt.org/directory"
 
+# Default keysize for private keys (default: 4096)
+KEYSIZE="4096"
+
+#HOOK=hooks/email-notify/hook.sh
+HOOK=hook.py
 HOOK_CHAIN="no"
-WELLKNOWN="${NSLE}/www-temp"
+
+# Minimum days before expiration to automatically renew certificate (default: 30)
+RENEW_DAYS="30"
+
+# Regenerate private keys instead of just signing new certificates on renewal (default: no)
+PRIVATE_KEY_RENEW="no"
+
 # E-mail to use during the registration (default: <unset>)
 CONTACT_EMAIL="admin@yourdomain.com"
