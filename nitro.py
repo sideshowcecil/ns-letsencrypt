@@ -241,7 +241,6 @@ class Nitro:
             binding = lbvserver_responderpolicy_binding()
             binding.name = lb.name
             binding.policyname = policy_name
-            binding.priority = 10  # TODO: need to change depending on the currently bound policies
             logging.info('Unbinding responder policy %s to lbvserver %s' % (policy_name, lb.name))
             lbvserver_responderpolicy_binding.delete(client, binding)
         # remove responder policy
