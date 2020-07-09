@@ -1,13 +1,15 @@
-private_key.pem
-private_key.json
-domains.txt
-config.sh
-hook.sh
-certs/*
-archive/*
+# dehydrated
 accounts/*
-.acme-challenges/*
-mynsconfig.py
-*.pyc
+archive/*
+certs/*
 chains/*
-.counter*
+domains.txt
+dehydrated_config
+
+# python
+__pycache__
+*.pyc
+Pipfile.lock
+
+# custom
+nsconfig.py

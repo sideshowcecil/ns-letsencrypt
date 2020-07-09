@@ -1,0 +1,11 @@
+from nitro import NitroConfig
+
+nitro_config = [
+    NitroConfig(
+        host='hostname',
+        protocol='https',
+        username='username',
+        password='password',
+        cert_validation=True
+    ),
+]
