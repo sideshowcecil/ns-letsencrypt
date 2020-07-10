@@ -169,6 +169,18 @@ class Nitro:
             raise NitroError(e)
         return None
 
+    def get_responder_policy_priority(self, lb: Union[csvserver, lbvserver], client: nitro_service) -> int:
+        """Get next available priority for a responder policy"""
+        bindings = csvserver_responderpolicy_binding.get(client, lb.name) if lb is csvserver else lbvserver_responderpolicy_binding.get(client, lb.name)
+        priorities = list(map(lambda b: int(b.priority), bindings))
+        priorities.sort()
+        # get next priority
+        priority = 10  # TODO: make this configurable?
+        for p in priorities:
+            if priority == p:
+                priority += 1
+        return priority
+
     def deploy_challenge(self, domain: str, challenge_filename: str, challenge_value: str):
         """Deploy and ACME challenge"""
         logging.info('Deploying challenge for %s: %s' % (domain, challenge_filename))
@@ -195,14 +207,7 @@ class Nitro:
         logging.info('Creating responder policy %s' % policy.name)
         responderpolicy.add(client, policy)
         # get priorities of existing bindings
-        bindings = csvserver_responderpolicy_binding.get(client, lb.name) if lb is csvserver else lbvserver_responderpolicy_binding.get(client, lb.name)
-        priorities = list(map(lambda b: int(b.priority), bindings))
-        priorities.sort()
-        # get next priority
-        priority = 10  # TODO: make this configurable?
-        for p in priorities:
-            if priority == p:
-                priority += 1
+        priority = self.get_responder_policy_priority(lb, client)
         # bind responder policy to lb/cs
         if lb is csvserver:
             binding = csvserver_responderpolicy_binding()
