@@ -65,7 +65,7 @@ class NitroCert:
     chain: str = ''
 
     @property
-    def fullchain(self):
+    def fullchain(self) -> str:
         return self.cert + self.chain
 
 
@@ -111,7 +111,7 @@ class Nitro:
             logging.info('Saving nsconfig for %s' % client.ipaddress)
             client.save_config()
 
-    def get_lb(self, domain: str):
+    def get_lb(self, domain: str) -> NitroLB:
         """Get an CS/LB based on a domain"""
         try:
             # lookup ip of domain
@@ -131,11 +131,11 @@ class Nitro:
             raise DomainNotFound(domain)
         raise DomainNotFound(domain)
 
-    def get_client(self, domain: str):
+    def get_client(self, domain: str) -> nitro_service:
         """Get a nitro client based on a domain"""
         return self.get_lb(domain).client
 
-    def get_certificate(self, domain: str):
+    def get_certificate(self, domain: str) -> NitroCert:
         """Get a certifivate incl private key and chain"""
         client = self.get_client(domain)
         try:
