@@ -31,10 +31,10 @@ if __name__ == '__main__':
             domain, challenge_filename, challenge_value = args
             nitro.deploy_challenge(domain, challenge_filename, challenge_value)
         elif hook_stage == 'clean_challenge':
-            domain, challenge_filename = args
+            domain, challenge_filename, challenge_value = args
             nitro.clean_challenge(domain, challenge_filename)
         elif hook_stage == 'deploy_cert':
-            domain, key_file, cert_file, full_chain_file, chain_file = args
+            domain, key_file, cert_file, full_chain_file, chain_file, timestamp = args
             nitro.deploy_cert(domain, key_file, cert_file, full_chain_file, chain_file)
         elif hook_stage == 'exit_hook':
             # save the config as a final step
