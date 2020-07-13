@@ -1,6 +1,7 @@
 #!/bin/bash
 
-CHALLENGETYPE="dns-01"
+CHALLENGETYPE="http-01"
+WELLKNOWN="./www-temp"
 
 # USE BELOW CA FOR TESTING OTHERWISE YOU MIGHT GET BANNED FROM LE https://community.letsencrypt.org/t/rate-limits-for-lets-encrypt/6769
 CA="https://acme-staging-v02.api.letsencrypt.org/directory"
