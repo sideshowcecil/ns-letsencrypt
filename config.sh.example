@@ -10,7 +10,7 @@ CA="https://acme-staging-v02.api.letsencrypt.org/directory"
 KEYSIZE="4096"
 
 #HOOK=hooks/email-notify/hook.sh
-HOOK=hook.py
+HOOK="./hook.py"
 HOOK_CHAIN="no"
 
 # Minimum days before expiration to automatically renew certificate (default: 30)
