@@ -34,9 +34,11 @@ class DomainNotFound(Exception):
 class NitroError(Exception):
     """General exception raised when there is an error with the Nitro API"""
     inner_exception: nitro_exception
+    message: str
 
-    def __init__(self, inner_exception: nitro_exception):
+    def __init__(self, inner_exception: nitro_exception = None, message: str = ''):
         self.inner_exception = inner_exception
+        self.message = message
 
 
 @dataclass(frozen=True)
@@ -171,7 +173,12 @@ class Nitro:
 
     def get_responder_policy_priority(self, lb: Union[csvserver, lbvserver], client: nitro_service) -> int:
         """Get next available priority for a responder policy"""
-        bindings = csvserver_responderpolicy_binding.get(client, lb.name) if lb is csvserver else lbvserver_responderpolicy_binding.get(client, lb.name)
+        if isinstance(lb, csvserver):
+            bindings = csvserver_responderpolicy_binding.get(client, lb.name)
+        elif isinstance(lb, lbvserver):
+            bindings = lbvserver_responderpolicy_binding.get(client, lb.name)
+        else:
+            raise NitroError(None, 'Unknown vserver type')
         priorities = list(map(lambda b: int(b.priority), bindings))
         priorities.sort()
         # get next priority
@@ -209,20 +216,22 @@ class Nitro:
         # get priorities of existing bindings
         priority = self.get_responder_policy_priority(lb, client)
         # bind responder policy to lb/cs
-        if lb is csvserver:
+        if isinstance(lb, csvserver):
             binding = csvserver_responderpolicy_binding()
             binding.name = lb.name
             binding.policyname = policy.name
             binding.priority = priority
             logging.info('Binding responder policy %s to csvserver %s' % (policy.name, lb.name))
             csvserver_responderpolicy_binding.add(client, binding)
-        else:
+        elif isinstance(lb, lbvserver):
             binding = lbvserver_responderpolicy_binding()
             binding.name = lb.name
             binding.policyname = policy.name
             binding.priority = priority
             logging.info('Binding responder policy %s to lbvserver %s' % (policy.name, lb.name))
             lbvserver_responderpolicy_binding.add(client, binding)
+        else:
+            raise NitroError(None, 'Unknown vserver type')
 
     def clean_challenge(self, domain: str, challenge_filename: str):
         """Cleanup ACME challenge"""
@@ -236,18 +245,20 @@ class Nitro:
         policy_name = 'ns-letencrypt-responder-policy-' + domain
 
         # unbind responder policy from lb/cs
-        if lb is csvserver:
+        if isinstance(lb, csvserver):
             binding = csvserver_responderpolicy_binding()
             binding.name = lb.name
             binding.policyname = policy_name
             logging.info('Unbinding responder policy %s to csvserver %s' % (policy_name, lb.name))
             csvserver_responderpolicy_binding.delete(client, binding)
-        else:
+        elif isinstance(lb, lbvserver):
             binding = lbvserver_responderpolicy_binding()
             binding.name = lb.name
             binding.policyname = policy_name
             logging.info('Unbinding responder policy %s to lbvserver %s' % (policy_name, lb.name))
             lbvserver_responderpolicy_binding.delete(client, binding)
+        else:
+            raise NitroError(None, 'Unknown vserver type')
         # remove responder policy
         policy = responderpolicy()
         policy.name = policy_name
