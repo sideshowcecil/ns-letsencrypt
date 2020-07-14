@@ -3,8 +3,8 @@ accounts/*
 archive/*
 certs/*
 chains/*
+config.sh
 domains.txt
-dehydrated_config
 
 # python
 __pycache__
