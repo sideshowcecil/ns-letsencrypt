@@ -302,7 +302,67 @@ class Nitro:
         logging.info('Removing responder action %s' % action.name)
         responderaction.delete(client, action)
 
-    def deploy_cert(self, domain: str, key_file: str, cert_file: str, full_chain_file: str, chain_file: str, timestamp: str):
+    def deploy_cert(self, domain: str, key_file: str, cert_file: str, full_chain_file: str, chain_file: str):
         """Deploy a certificate"""
         logging.info('Deploying cert for %s' % domain)
-        pass
+
+        client = self.get_client(domain)
+        cert = self.get_certificate(domain)
+
+        if cert is None:
+            # cert not found
+            logging.info('Creating new cert for %s' % domain)
+
+            # create CA if needed
+            cacert_name = 'letsencrypt-chain'
+            cacert_filename = '%s.crt' % cacert_name
+            try:
+                cacert = sslcertkey.get(client, cacert_filename)
+            except nitro_exception:
+                # CA not found
+                # add CA file
+                self.save_systemfile(client, cacert_filename, chain_file)
+                # add cert
+                cacert = sslcertkey()
+                cacert.certkey = cacert_name
+                cacert.cert = cacert_filename
+                sslcertkey.add(client, cacert)
+                logging.info('Added Let\'s Encrypt CA')
+
+            # add cert file
+            cert_filename = '%s.crt' % domain
+            self.save_systemfile(client, cert_filename, cert_file)
+            # add key file
+            key_filename = '%s.key' % domain
+            self.save_systemfile(client, key_filename, key_file)
+            # add cert
+            cert = sslcertkey()
+            cert.certkey = domain
+            cert.cert = cert_filename
+            cert.key = key_filename
+            cert.nodomaincheck = True
+            sslcertkey.add(client, cert)
+            logging.info('Certificate added for %s' % domain)
+
+            # link the cert to the CA
+            link = sslcertkey()
+            link.certkey = cert.certkey
+            link.linkcertkeyname = cacert.certkey
+            sslcertkey.link(client, link)
+            logging.info('Certificate link to CA created for %s' % domain)
+        else:
+            # cert found
+            logging.info('Updating cert for %s' % domain)
+
+            cert_filename = '%s.crt' % domain
+            # replace cert file
+            self.delete_systemfile(client, cert_filename)
+            self.save_systemfile(client, cert_filename, cert_file)
+            # update cert
+            cert = sslcertkey()
+            cert.certkey = domain
+            cert.cert = cert_filename
+            cert.nodomaincheck = True
+            sslcertkey.change(client, cert)
+
+            logging.info('Certificate updated for %s' % domain)
