@@ -203,7 +203,7 @@ class Nitro:
             raise NitroError(e)
         return None
 
-    def get_responder_policy_priority(self, lb: Union[csvserver, lbvserver], client: nitro_service) -> int:
+    def get_responder_policy_priority(self, client: nitro_service, lb: Union[csvserver, lbvserver]) -> int:
         """Get next available priority for a responder policy"""
         if isinstance(lb, csvserver):
             bindings = csvserver_responderpolicy_binding.get(client, lb.name)
@@ -246,7 +246,7 @@ class Nitro:
         logging.info('Creating responder policy %s' % policy.name)
         responderpolicy.add(client, policy)
         # get priorities of existing bindings
-        priority = self.get_responder_policy_priority(lb, client)
+        priority = self.get_responder_policy_priority(client, lb)
         # bind responder policy to lb/cs
         if isinstance(lb, csvserver):
             binding = csvserver_responderpolicy_binding()
