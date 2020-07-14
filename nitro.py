@@ -277,30 +277,39 @@ class Nitro:
         policy_name = 'ns-letencrypt-responder-policy-' + domain
 
         # unbind responder policy from lb/cs
-        if isinstance(lb, csvserver):
-            binding = csvserver_responderpolicy_binding()
-            binding.name = lb.name
-            binding.policyname = policy_name
-            logging.info('Unbinding responder policy %s to csvserver %s' % (policy_name, lb.name))
-            csvserver_responderpolicy_binding.delete(client, binding)
-        elif isinstance(lb, lbvserver):
-            binding = lbvserver_responderpolicy_binding()
-            binding.name = lb.name
-            binding.policyname = policy_name
-            logging.info('Unbinding responder policy %s to lbvserver %s' % (policy_name, lb.name))
-            lbvserver_responderpolicy_binding.delete(client, binding)
-        else:
-            raise NitroError(None, 'Unknown vserver type')
+        try:
+            if isinstance(lb, csvserver):
+                binding = csvserver_responderpolicy_binding()
+                binding.name = lb.name
+                binding.policyname = policy_name
+                logging.info('Unbinding responder policy %s to csvserver %s' % (policy_name, lb.name))
+                csvserver_responderpolicy_binding.delete(client, binding)
+            elif isinstance(lb, lbvserver):
+                binding = lbvserver_responderpolicy_binding()
+                binding.name = lb.name
+                binding.policyname = policy_name
+                logging.info('Unbinding responder policy %s to lbvserver %s' % (policy_name, lb.name))
+                lbvserver_responderpolicy_binding.delete(client, binding)
+            else:
+                raise NitroError(None, 'Unknown vserver type')
+        except nitro_exception:
+            logging.warn('Could not unbind responder policy %s from vserver %s' % (policy_name, lb.name))
         # remove responder policy
-        policy = responderpolicy()
-        policy.name = policy_name
-        logging.info('Removing responder policy %s' % policy.name)
-        responderpolicy.delete(client, policy)
+        try:
+            policy = responderpolicy()
+            policy.name = policy_name
+            logging.info('Removing responder policy %s' % policy.name)
+            responderpolicy.delete(client, policy)
+        except nitro_exception:
+            logging.warn('Could not remove responder policy %s ' % policy.name)
         # remove responder action
-        action = responderaction()
-        action.name = action_name
-        logging.info('Removing responder action %s' % action.name)
-        responderaction.delete(client, action)
+        try:
+            action = responderaction()
+            action.name = action_name
+            logging.info('Removing responder action %s' % action.name)
+            responderaction.delete(client, action)
+        except nitro_exception:
+            logging.warn('Could not remove responder action %s ' % action.name)
 
     def deploy_cert(self, domain: str, key_file: str, cert_file: str, full_chain_file: str, chain_file: str):
         """Deploy a certificate"""
