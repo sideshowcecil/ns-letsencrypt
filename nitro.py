@@ -3,7 +3,7 @@ import re
 import socket
 import urllib3
 
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from dataclasses import dataclass
 from typing import List, Union
 
@@ -62,6 +62,7 @@ class NitroLB:
 class NitroCert:
     """Certificate information"""
     name: str
+    sslcertkey: sslcertkey
     cert: str
     key: str
     chain: str = ''
@@ -138,6 +139,39 @@ class Nitro:
         """Get a nitro client based on a domain"""
         return self.get_lb(domain).client
 
+    def get_systemfile(self, client, filename) -> systemfile:
+        """Fetch a systemfile from Nitro"""
+        try:
+            args = systemfile_args()
+            args.filelocation = '/nsconfig/ssl/'
+            args.filename = filename
+            return systemfile.get_args(client, args)[0]
+        except nitro_exception as e:
+            raise NitroError(e)
+
+    def save_systemfile(self, client, filename, local_filename):
+        """Save systemfile to Nitro"""
+        try:
+            with open(local_filename, 'r') as f:
+                file = systemfile()
+                file.filename = filename
+                file.filelocation = '/nsconfig/ssl/'
+                file.filecontent = b64encode(bytes(f.read(), 'utf-8')).decode('ascii')
+                file.fileencoding = 'BASE64'
+                systemfile.add(client, file)
+        except nitro_exception as e:
+            raise NitroError(e)
+
+    def delete_systemfile(self, client, filename):
+        """Delte a systemfile from Nitro"""
+        try:
+            args = systemfile()
+            args.filelocation = '/nsconfig/ssl/'
+            args.filename = filename
+            systemfile.delete(client, args)
+        except nitro_exception as e:
+            raise NitroError(e)
+
     def get_certificate(self, domain: str) -> NitroCert:
         """Get a certifivate incl private key and chain"""
         client = self.get_client(domain)
@@ -145,28 +179,25 @@ class Nitro:
             for cert in sslcertkey.get(client):
                 if 'CN=' + domain in cert.subject:
                     # found matching cert
-                    args = systemfile_args()
-                    args.filelocation = '/nsconfig/ssl/'
 
                     # get cert file
-                    args.filename = cert.cert
-                    certfile = systemfile.get_args(client, args)[0]
+                    certfile = self.get_systemfile(client, cert.cert)
 
                     # get key file
-                    args.filename = cert.key
-                    keyfile = systemfile.get_args(client, args)[0]
+                    keyfile = self.get_systemfile(client, cert.key)
 
                     # get ca file
+                    cafile = None
                     if cert.linkcertkeyname:
                         cacert = sslcertkey.get(client, cert.linkcertkeyname)
-                        args.filename = cert.cert
-                        cafile = systemfile.get_args(client, args)[0]
+                        cafile = self.get_systemfile(client, cacert.cert)
 
                     return NitroCert(
                         name=domain,
-                        cert=b64decode(certfile.filecontent).decode(encoding="utf-8"),
-                        key=b64decode(keyfile.filecontent).decode(encoding="utf-8"),
-                        chain=b64decode(cafile.filecontent).decode(encoding="utf-8") if cafile else '',
+                        sslcertkey=sslcertkey,
+                        cert=b64decode(certfile.filecontent).decode(encoding='utf-8'),
+                        key=b64decode(keyfile.filecontent).decode(encoding='utf-8'),
+                        chain=b64decode(cafile.filecontent).decode(encoding='utf-8') if cafile else '',
                     )
         except nitro_exception as e:
             raise NitroError(e)
