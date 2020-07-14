@@ -87,7 +87,7 @@ class Nitro:
         clients = []
         for c in config:
             try:
-                logging.info('Connecting to nitro client %s://%s' % (c.protocol, c.host))
+                logging.debug('Connecting to nitro client %s://%s' % (c.protocol, c.host))
                 client = nitro_service(c.host, c.protocol)
                 client.certvalidation = c.cert_validation
                 client.login(c.username, c.password)
@@ -100,6 +100,7 @@ class Nitro:
         """Disconnect from all clients"""
         try:
             for client in self.clients:
+                logging.debug('Disconnecting from nitro client %s://%s' % (client.protocol, client.host))
                 try:
                     client.logout()
                 except nitro_exception:
