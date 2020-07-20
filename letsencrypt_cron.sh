@@ -1,13 +1,8 @@
 #!/bin/bash
 
-# Base
-CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DEHYDRATED="${CURRENT_DIR}/dehydrated/dehydrated"
-CONFIG="${CURRENT_DIR}/config.sh"
-HOOK="${CURRENT_DIR}/hook.py"
+# normal usage
+./dehydrated/dehydrated -c -f ./config.sh -k ./hookpy
 
-# Normal usage
-$DEHYDRATED -c -f $CONFIG -k $HOOK
+# cleanup unused certs
+./dehydrated/dehydrated -gc -f ./config.sh
 
-# Cleanup unused certs
-$DEHYDRATED -gc -f $CONFIG
