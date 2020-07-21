@@ -1,4 +1,9 @@
 [[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
 name = "ns-letsencrypt"
 url = "https://github.com/sideshowcecil/ns-letsencrypt"
 verify_ssl = true
@@ -6,9 +11,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-requests = "*"
-dataclasses = "*"
-typing = "*"
+requests = {version="*", index="pypi"}
+dataclasses = {version="*", index="pypi"}
+typing = {version="*", index="pypi"}
 nitro-python = {path = "./nitro-python"}
 
 [requires]
