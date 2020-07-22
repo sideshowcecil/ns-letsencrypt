@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # normal usage
-./dehydrated/dehydrated -c -f ./config.sh -k ./hook.py
+./dehydrated/dehydrated --config ./config.sh --hook ./hook.py --cron
 
 # cleanup unused certs
-./dehydrated/dehydrated -gc -f ./config.sh
+./dehydrated/dehydrated --config ./config.sh --cleanup
 

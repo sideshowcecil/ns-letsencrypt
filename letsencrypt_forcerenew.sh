@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # force renewal
-./dehydrated/dehydrated -c -f ./config.sh -x -k ./hook.py
+./dehydrated/dehydrated --config ./config.sh --hook ./hook.py --cron --force
 
 # cleanup unused certs
-./dehydrated/dehydrated -gc -f $./config.sh
+./dehydrated/dehydrated --config ./config.sh --cleanup
 

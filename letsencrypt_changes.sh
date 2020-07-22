@@ -9,7 +9,7 @@ if git log -$DEPTH | grep -qE '^Merge: [0-9a-z].+ [0-9a-z].+$'; then
     # Fetch ssl certificates
     ./fetch_cert.py $domain
     # Run dehydrated
-    ./dehydrated/dehydrated -f ./config.sh -c --domain $domain --hook ./hook.py
+    ./dehydrated/dehydrated --config ./config.sh --hook ./hook.py --cron --domain $domain
   done
 fi
 
