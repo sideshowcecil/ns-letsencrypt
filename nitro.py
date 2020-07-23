@@ -175,32 +175,35 @@ class Nitro:
     def get_certificate(self, domain: str) -> NitroCert:
         """Get a certifivate incl private key and chain"""
         client = self.get_client(domain)
+        cert_name = 'letsencrypt-%s' % domain
         try:
-            for cert in sslcertkey.get(client):
-                if 'CN=' + domain in cert.subject:
-                    # found matching cert
+            # get cert
+            cert = sslcertkey.get(client, cert_name)
 
-                    # get cert file
-                    certfile = self.get_systemfile(client, cert.cert)
+            # we have found a matching cert
 
-                    # get key file
-                    keyfile = self.get_systemfile(client, cert.key)
+            # get cert file
+            certfile = self.get_systemfile(client, cert.cert)
 
-                    # get ca file
-                    cafile = None
-                    if cert.linkcertkeyname:
-                        cacert = sslcertkey.get(client, cert.linkcertkeyname)
-                        cafile = self.get_systemfile(client, cacert.cert)
+            # get key file
+            keyfile = self.get_systemfile(client, cert.key)
 
-                    return NitroCert(
-                        name=domain,
-                        sslcertkey=sslcertkey,
-                        cert=b64decode(certfile.filecontent).decode(encoding='utf-8'),
-                        key=b64decode(keyfile.filecontent).decode(encoding='utf-8'),
-                        chain=b64decode(cafile.filecontent).decode(encoding='utf-8') if cafile else '',
-                    )
+            # get ca file
+            cafile = None
+            if cert.linkcertkeyname:
+                cacert = sslcertkey.get(client, cert.linkcertkeyname)
+                cafile = self.get_systemfile(client, cacert.cert)
+
+            return NitroCert(
+                name=domain,
+                sslcertkey=sslcertkey,
+                cert=b64decode(certfile.filecontent).decode(encoding='utf-8'),
+                key=b64decode(keyfile.filecontent).decode(encoding='utf-8'),
+                chain=b64decode(cafile.filecontent).decode(encoding='utf-8') if cafile else '',
+            )
         except nitro_exception as e:
-            raise NitroError(e)
+            # cert not found
+            pass
         return None
 
     def get_responder_policy_priority(self, client: nitro_service, lb: Union[csvserver, lbvserver]) -> int:
@@ -318,6 +321,8 @@ class Nitro:
         client = self.get_client(domain)
         cert = self.get_certificate(domain)
 
+        cert_name = 'letsencrypt-%s' % domain
+
         if cert is None:
             # cert not found
             logging.info('Creating new cert for %s' % domain)
@@ -346,7 +351,7 @@ class Nitro:
             self.save_systemfile(client, key_filename, key_file)
             # add cert
             cert = sslcertkey()
-            cert.certkey = domain
+            cert.certkey = cert_name
             cert.cert = cert_filename
             cert.key = key_filename
             cert.nodomaincheck = True
@@ -363,13 +368,13 @@ class Nitro:
             # cert found
             logging.info('Updating cert for %s' % domain)
 
-            cert_filename = '%s.crt' % domain
+            cert_filename = cert.cert_filename
             # replace cert file
             self.delete_systemfile(client, cert_filename)
             self.save_systemfile(client, cert_filename, cert_file)
             # update cert
             cert = sslcertkey()
-            cert.certkey = domain
+            cert.certkey = cert_name
             cert.cert = cert_filename
             cert.nodomaincheck = True
             sslcertkey.change(client, cert)
