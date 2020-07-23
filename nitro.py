@@ -23,6 +23,31 @@ from nssrc.com.citrix.netscaler.nitro.service.nitro_service import nitro_service
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def get_sslcertkey_name(domain: str):
+    """Get name of the sslcertkey based on a domain"""
+    return 'ns-letencrypt-%s' % domain
+
+
+def get_cert_filename(name: str):
+    """Get name of the cert filename based on a domain"""
+    return 'ns-letencrypt-%s.crt' % name
+
+
+def get_key_filename(name: str):
+    """Get name of the key filename based on a domain"""
+    return 'ns-letencrypt-%s.pem' % name
+
+
+def get_responder_action_name(domain: str):
+    """Get name of the responder action based on a domain"""
+    return 'ns-letencrypt-responder-action-%s' % domain
+
+
+def get_responder_policy_name(domain: str):
+    """Get name of the responder policy based on a domain"""
+    return 'ns-letencrypt-responder-policy-%s' % domain
+
+
 class DomainNotFound(Exception):
     """Exception raised if the domain could not be found"""
     domain: str
@@ -175,10 +200,9 @@ class Nitro:
     def get_certificate(self, domain: str) -> NitroCert:
         """Get a certifivate incl private key and chain"""
         client = self.get_client(domain)
-        cert_name = 'letsencrypt-%s' % domain
         try:
             # get cert
-            cert = sslcertkey.get(client, cert_name)
+            cert = sslcertkey.get(client, get_sslcertkey_name(domain))
 
             # we have found a matching cert
 
@@ -231,19 +255,16 @@ class Nitro:
         client = lb.client
         lb = lb.lb
 
-        action_name = 'ns-letencrypt-responder-action-' + domain
-        policy_name = 'ns-letencrypt-responder-policy-' + domain
-
         # create responder action
         action = responderaction()
-        action.name = action_name
+        action.name = get_responder_action_name(domain)
         action.type = 'respondwith'
         action.target = "\"HTTP/1.0 200 OK\" +\"\\r\\n\\r\\n\" + \"%s\"" % challenge_value
         logging.info('Creating responder action %s' % action.name)
         responderaction.add(client, action)
         # create responder policy
         policy = responderpolicy()
-        policy.name = policy_name
+        policy.name = get_responder_policy_name(domain)
         policy.rule = 'HTTP.REQ.URL.CONTAINS(\"well-known/acme-challenge/%s\")' % challenge_filename
         policy.action = action.name
         logging.info('Creating responder policy %s' % policy.name)
@@ -276,8 +297,7 @@ class Nitro:
         client = lb.client
         lb = lb.lb
 
-        action_name = 'ns-letencrypt-responder-action-' + domain
-        policy_name = 'ns-letencrypt-responder-policy-' + domain
+        policy_name = get_responder_policy_name(domain)
 
         # unbind responder policy from lb/cs
         try:
@@ -308,7 +328,7 @@ class Nitro:
         # remove responder action
         try:
             action = responderaction()
-            action.name = action_name
+            action.name = get_responder_action_name(domain)
             logging.info('Removing responder action %s' % action.name)
             responderaction.delete(client, action)
         except nitro_exception:
@@ -321,15 +341,13 @@ class Nitro:
         client = self.get_client(domain)
         cert = self.get_certificate(domain)
 
-        cert_name = 'letsencrypt-%s' % domain
-
         if cert is None:
             # cert not found
             logging.info('Creating new cert for %s' % domain)
 
             # create CA if needed
-            cacert_name = 'letsencrypt-chain'
-            cacert_filename = '%s.crt' % cacert_name
+            cacert_name = get_sslcertkey_name('chain') # note: fixed value here
+            cacert_filename = get_cert_filename(cacert_name)
             try:
                 cacert = sslcertkey.get(client, cacert_filename)
             except nitro_exception:
@@ -344,14 +362,14 @@ class Nitro:
                 logging.info('Added Let\'s Encrypt CA')
 
             # add cert file
-            cert_filename = '%s.crt' % domain
+            cert_filename = get_cert_filename(domain)
             self.save_systemfile(client, cert_filename, cert_file)
             # add key file
-            key_filename = '%s.key' % domain
+            key_filename = get_key_filename(domain)
             self.save_systemfile(client, key_filename, key_file)
             # add cert
             cert = sslcertkey()
-            cert.certkey = cert_name
+            cert.certkey = get_sslcertkey_name(domain)
             cert.cert = cert_filename
             cert.key = key_filename
             cert.nodomaincheck = True
@@ -374,7 +392,7 @@ class Nitro:
             self.save_systemfile(client, cert_filename, cert_file)
             # update cert
             cert = sslcertkey()
-            cert.certkey = cert_name
+            cert.certkey = get_sslcertkey_name(domain)
             cert.cert = cert_filename
             cert.nodomaincheck = True
             sslcertkey.change(client, cert)
