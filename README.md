@@ -31,6 +31,13 @@ To use this project one needs to provide the following information:
 * nsconfig.py
   * provides connection details to the NetScaler/ADC instances, see nsconfig.py.example
 
+## Nitro Command Policy
+
+To limit the permissions of the nitro user who is used the following command policy can be added and assigned:
+```
+^((add|rm|set|show)\s+responder\s+policy)|((add|rm|set|show)\s+responder\s+action)|((show|bind|unbind)\s+(lb|cs)\s+vserver)|((add|rm|show)\s+system\s+file.*-fileLocation.*nsconfig.*ssl.*)|((add|create|update|show|link)+\s+ssl\s+cert)|(save\s+ns\s+config)
+```
+
 ## References
 
 Kudos to @ryancbutler for the initial project: https://github.com/ryancbutler/ns-letsencrypt
