@@ -347,8 +347,8 @@ class Nitro:
             logging.info('Creating new cert for %s' % domain)
 
             # create CA if needed
-            cacert_name = get_sslcertkey_name('chain') # note: fixed value here
-            cacert_filename = get_cert_filename(cacert_name)
+            cacert_name = get_sslcertkey_name('chain')  # note: fixed value here
+            cacert_filename = get_cert_filename('chain')  # note: fixed value here
             try:
                 cacert = sslcertkey.get(client, cacert_filename)
             except nitro_exception:
