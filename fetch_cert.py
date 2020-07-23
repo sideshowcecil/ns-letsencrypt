@@ -29,6 +29,10 @@ if __name__ == '__main__':
         try:
             cert = nitro.get_certificate(domain)
 
+            if cert is None:
+                logging.warning('Certificate for %s could not be found' % domain)
+                continue
+
             cert_path = 'certs/%s' % domain
             if not os.path.exists(cert_path):
                 os.mkdir(cert_path)
