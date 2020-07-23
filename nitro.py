@@ -340,6 +340,7 @@ class Nitro:
 
         client = self.get_client(domain)
         cert = self.get_certificate(domain)
+        cert_filename = get_cert_filename(domain)
 
         if cert is None:
             # cert not found
@@ -362,7 +363,6 @@ class Nitro:
                 logging.info('Added Let\'s Encrypt CA')
 
             # add cert file
-            cert_filename = get_cert_filename(domain)
             self.save_systemfile(client, cert_filename, cert_file)
             # add key file
             key_filename = get_key_filename(domain)
@@ -386,7 +386,6 @@ class Nitro:
             # cert found
             logging.info('Updating cert for %s' % domain)
 
-            cert_filename = cert.cert_filename
             # replace cert file
             self.delete_systemfile(client, cert_filename)
             self.save_systemfile(client, cert_filename, cert_file)
