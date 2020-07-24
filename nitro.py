@@ -339,33 +339,35 @@ class Nitro:
         logging.info('Deploying cert for %s' % domain)
 
         client = self.get_client(domain)
+        # cert
         cert = self.get_certificate(domain)
         cert_filename = get_cert_filename(domain)
+        key_filename = get_key_filename(domain)
+        # ca
+        cacert_name = get_sslcertkey_name('chain')  # note: fixed value here
+        cacert_filename = get_cert_filename('chain')  # note: fixed value here
+
+        # create CA if needed
+        try:
+            cacert = sslcertkey.get(client, cacert_filename)
+        except nitro_exception:
+            # CA not found
+            # add CA file
+            self.save_systemfile(client, cacert_filename, chain_file)
+            # add cert
+            cacert = sslcertkey()
+            cacert.certkey = cacert_name
+            cacert.cert = cacert_filename
+            sslcertkey.add(client, cacert)
+            logging.info('Added Let\'s Encrypt CA')
 
         if cert is None:
             # cert not found
             logging.info('Creating new cert for %s' % domain)
 
-            # create CA if needed
-            cacert_name = get_sslcertkey_name('chain')  # note: fixed value here
-            cacert_filename = get_cert_filename('chain')  # note: fixed value here
-            try:
-                cacert = sslcertkey.get(client, cacert_filename)
-            except nitro_exception:
-                # CA not found
-                # add CA file
-                self.save_systemfile(client, cacert_filename, chain_file)
-                # add cert
-                cacert = sslcertkey()
-                cacert.certkey = cacert_name
-                cacert.cert = cacert_filename
-                sslcertkey.add(client, cacert)
-                logging.info('Added Let\'s Encrypt CA')
-
             # add cert file
             self.save_systemfile(client, cert_filename, cert_file)
             # add key file
-            key_filename = get_key_filename(domain)
             self.save_systemfile(client, key_filename, key_file)
             # add cert
             cert = sslcertkey()
@@ -386,13 +388,24 @@ class Nitro:
             # cert found
             logging.info('Updating cert for %s' % domain)
 
+            add_key_file = False
             # replace cert file
-            self.delete_systemfile(client, cert_filename)
+            try:
+                self.delete_systemfile(client, cert_filename)
+            except NitroError:
+                logging.warn('Could not remove existing cert file %s, now adding key as well' % cert_filename)
+                add_key_file = True
             self.save_systemfile(client, cert_filename, cert_file)
+            # add key file
+            if add_key_file:
+                # as it is most likely not present
+                self.save_systemfile(client, key_filename, key_file)
             # update cert
             cert = sslcertkey()
             cert.certkey = get_sslcertkey_name(domain)
             cert.cert = cert_filename
+            if add_key_file:
+                cert.key = key_filename
             cert.nodomaincheck = True
             sslcertkey.change(client, cert)
 
