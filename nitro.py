@@ -25,27 +25,27 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def get_sslcertkey_name(domain: str):
     """Get name of the sslcertkey based on a domain"""
-    return 'ns-letencrypt-%s' % domain
+    return 'ns-letsencrypt-%s' % domain
 
 
 def get_cert_filename(name: str):
     """Get name of the cert filename based on a domain"""
-    return 'ns-letencrypt-%s-cert.pem' % name
+    return 'ns-letsencrypt-%s-cert.pem' % name
 
 
 def get_key_filename(name: str):
     """Get name of the key filename based on a domain"""
-    return 'ns-letencrypt-%s-privkey.pem' % name
+    return 'ns-letsencrypt-%s-privkey.pem' % name
 
 
 def get_responder_action_name(domain: str):
     """Get name of the responder action based on a domain"""
-    return 'ns-letencrypt-responder-action-%s' % domain
+    return 'ns-letsencrypt-responder-action-%s' % domain
 
 
 def get_responder_policy_name(domain: str):
     """Get name of the responder policy based on a domain"""
-    return 'ns-letencrypt-responder-policy-%s' % domain
+    return 'ns-letsencrypt-responder-policy-%s' % domain
 
 
 class DomainNotFound(Exception):
