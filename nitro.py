@@ -349,7 +349,7 @@ class Nitro:
 
         # create CA if needed
         try:
-            cacert = sslcertkey.get(client, cacert_filename)
+            cacert = sslcertkey.get(client, cacert_name)
         except nitro_exception:
             # CA not found
             # add CA file
