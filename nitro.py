@@ -30,12 +30,12 @@ def get_sslcertkey_name(domain: str):
 
 def get_cert_filename(name: str):
     """Get name of the cert filename based on a domain"""
-    return 'ns-letencrypt-%s.crt' % name
+    return 'ns-letencrypt-%s-cert.pem' % name
 
 
 def get_key_filename(name: str):
     """Get name of the key filename based on a domain"""
-    return 'ns-letencrypt-%s.pem' % name
+    return 'ns-letencrypt-%s-privkey.pem' % name
 
 
 def get_responder_action_name(domain: str):
